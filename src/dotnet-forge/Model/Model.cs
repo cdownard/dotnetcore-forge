@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 
@@ -27,14 +28,13 @@ namespace Forge.Model
     }
     public override string ToString()
     {
-      var template = Model.ModelTemplate();
-      template.Replace("{{className}}", this.ClassName);
-      var sb = new StringBuilder();
-      foreach(KeyValuePair<string, string> prop in this.Properties)
-      {
-        sb.AppendFormat("public {0} {1} { get; set; }", prop.Value, prop.Key);
-      }
-      template.Replace("{{properties}}", sb.ToString());
+      var properties = Properties
+        .Select(p => $"public {p.Value} {p.Key} {{ get; set; }}{Environment.NewLine}")
+        .Aggregate((l, r) => l + r);
+
+      var template = Model.ModelTemplate().
+        Replace("{{className}}", this.ClassName).
+        Replace("{{properties}}", properties);
 
       return template;
     }
