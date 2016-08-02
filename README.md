@@ -14,6 +14,14 @@ dotnet restore
 dotnet build
 ~~~
 
+If you'd like to build all projects at once from the root of the project, execute the following command:
+
+~~~
+dotnet build **/project.json
+~~~
+
+This argument can also be specified in the build task for vscode, located in the .vscode/tasks.json directory.
+
 ###Testing
 Execute tests using the dotnet test command
 
