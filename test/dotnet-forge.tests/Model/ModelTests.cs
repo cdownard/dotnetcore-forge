@@ -13,16 +13,20 @@ namespace Forge.Model.Tests
         [Fact]
         public void Model_Emits_Valid_Class()
         {
-            var model = new Model
+            var definition = new ModelDefinition
             {
                 ClassName = "TestClass",
-                Properties = new Dictionary<string, string> {
-                   { "Index", "int" },
-                   { "Name", "string" }
+                Namespace = "YourAppName.Models",
+                Properties = new[] 
+                {
+                    new ModelProperty { Name = "Index", Type = typeof(int) },
+                    new ModelProperty { Name = "Name", Type = typeof(string) }
                 }
             };
 
-            var output = model.ToString();
+            var modelBuilder = new ModelBuilder();
+
+            var output = modelBuilder.Build(definition);
             var tree = CSharpSyntaxTree.ParseText(output);
             var root = (CompilationUnitSyntax)tree.GetRoot();
 
@@ -41,7 +45,7 @@ namespace Forge.Model.Tests
                 .Assembly;
 
             var corlib = MetadataReference.CreateFromFile(corlibAssembly.Location);
-            var compilation = CSharpCompilation.Create("Model", new [] { tree }, new [] { corlib });
+            var compilation = CSharpCompilation.Create("Model", new[] { tree }, new[] { corlib });
             var semanticModel = compilation.GetSemanticModel(tree);
 
             var properties = classDeclaration
@@ -62,7 +66,7 @@ namespace Forge.Model.Tests
                 .Where(p => p.Name == "Index")
                 .Where(p => TypeSymbolHelper.TypeSymbolMatchesType(p.Type, typeof(int), semanticModel))
                 .SingleOrDefault();
-            
+
             Assert.NotNull(indexProperty);
         }
     }
