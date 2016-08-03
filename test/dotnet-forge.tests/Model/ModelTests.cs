@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -30,12 +29,18 @@ namespace Forge.Model.Tests
             var tree = CSharpSyntaxTree.ParseText(output);
             var root = (CompilationUnitSyntax)tree.GetRoot();
 
-            var namespaceDeclaration = root.Members.LastOrDefault() as NamespaceDeclarationSyntax;
+            var namespaceDeclaration = root
+                .DescendantNodes()
+                .OfType<NamespaceDeclarationSyntax>()
+                .SingleOrDefault();
 
             Assert.NotNull(namespaceDeclaration);
             Assert.Equal("YourAppName.Models", namespaceDeclaration.Name.ToString());
 
-            var classDeclaration = namespaceDeclaration.Members.LastOrDefault() as ClassDeclarationSyntax;
+            var classDeclaration = namespaceDeclaration
+                .DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .LastOrDefault();
 
             Assert.NotNull(classDeclaration);
             Assert.Equal("TestClass", classDeclaration.Identifier.ToString());
