@@ -32,9 +32,9 @@ namespace Forge.Model
         .Select(p => $"public {p.Value} {p.Key} {{ get; set; }}{Environment.NewLine}")
         .Aggregate((l, r) => l + r);
 
-      var template = Model.ModelTemplate().
-        Replace("{{className}}", this.ClassName).
-        Replace("{{properties}}", properties);
+      var template = Model.ModelTemplate()
+        .Replace("{{className}}", this.ClassName)
+        .Replace("{{properties}}", properties);
 
       return template;
     }
