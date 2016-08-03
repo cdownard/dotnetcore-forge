@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Forge.Model
 {
@@ -27,6 +28,11 @@ namespace Forge.Model
               .Replace("{{properties}}", properties);
 
             return template;
+        }
+
+        public string RoslynBuild(ModelDefinition definition)
+        {
+            throw new NotImplementedException();
         }
     }
 }
