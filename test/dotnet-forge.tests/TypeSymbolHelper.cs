@@ -8,18 +8,13 @@ namespace Forge
     {
         public static bool TypeSymbolMatchesType(ITypeSymbol typeSymbol, Type type, SemanticModel model)
         {
-            var compiledTypeSymbol = GetTypeSymbolForType(type, model);
-            return compiledTypeSymbol.Equals(typeSymbol);
+            return GetTypeSymbolForType(type, model).Equals(typeSymbol);
         }
 
         public static INamedTypeSymbol GetTypeSymbolForType(Type type, SemanticModel model)
         {
-            if (!type.IsConstructedGenericType)
-            {
-                var temp = model.Compilation.GetTypeByMetadataName(type.FullName);
-                return temp;
-            }
-
+            if (!type.IsConstructedGenericType) return model.Compilation.GetTypeByMetadataName(type.FullName);
+                
             var typeArgumentInfos = type.GenericTypeArguments
                 .Select(typeArgument => GetTypeSymbolForType(typeArgument, model))
                 .ToArray();
