@@ -1,38 +1,47 @@
 using System;
+using System.IO;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Formatting;
 
 namespace Forge.Model
 {
     public class ModelBuilder
     {
-        private const string ModelTemplate = @"
-          namespace {{namespace}}
-          {
-            public class {{className}}
+        public string Build(ModelDefinition definition)
+        {
+            var namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(definition.Namespace));
+
+            var classDeclaration = SyntaxFactory
+                .ClassDeclaration(definition.ClassName)
+                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+
+            var properties = definition.Properties
+                .Select(p => new { Name = p.Name, Type = SyntaxFactory.ParseTypeName(p.Type.FullName) })
+                .Select(p => SyntaxFactory.PropertyDeclaration(p.Type, p.Name))
+                .Select(p => p.WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword))))
+                .Select(p => p.AddAccessorListAccessors(
+                  SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                  SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                ))
+                .ToArray();
+
+            var compilationUnit = SyntaxFactory.CompilationUnit().AddMembers(namespaceDeclaration.AddMembers(classDeclaration.AddMembers(properties)));
+
+            var result = new StringBuilder();
+
+            using (var workspace = new AdhocWorkspace())
             {
-              {{properties}}
+                var formatted = Formatter.Format(compilationUnit, workspace);
+                using(var writer = new StringWriter(result))
+                {
+                  formatted.WriteTo(writer);
+                }
             }
-          }
-        ";
 
-        public string Build(ModelDefinition modelDefinition)
-        {
-            var properties = modelDefinition.Properties
-              .Select(p => $"public {p.Type.FullName} {p.Name} {{ get; set; }}{Environment.NewLine}")
-              .Aggregate((l, r) => l + r);
-
-            var template = ModelTemplate
-              .Replace("{{namespace}}", modelDefinition.Namespace)
-              .Replace("{{className}}", modelDefinition.ClassName)
-              .Replace("{{properties}}", properties);
-
-            return template;
-        }
-
-        public string RoslynBuild(ModelDefinition definition)
-        {
-            throw new NotImplementedException();
+            return result.ToString();
         }
     }
 }

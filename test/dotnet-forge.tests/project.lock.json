@@ -7756,6 +7756,8 @@
       "xunit >= 2.1.0"
     ],
     ".NETCoreApp,Version=v1.0": [
+      "Microsoft.CodeAnalysis >= 1.3.2",
+      "Microsoft.CodeAnalysis.Compilers >= 1.3.2",
       "Microsoft.NETCore.App >= 1.0.0"
     ]
   },
