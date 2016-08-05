@@ -7,10 +7,10 @@ using System.Linq;
 
 namespace Forge.Model.Tests
 {
-    public class ModelTests
+    public class ModelBuilderTests
     {
         [Fact]
-        public void Model_Emits_Valid_Class()
+        public void ModelBuilder_Emits_Valid_Class()
         {
             var definition = new ModelDefinition
             {
@@ -25,8 +25,8 @@ namespace Forge.Model.Tests
 
             var modelBuilder = new ModelBuilder();
 
-            var output = modelBuilder.Build(definition);
-            var tree = CSharpSyntaxTree.ParseText(output);
+            var buildResult = modelBuilder.Build(definition);
+            var tree = CSharpSyntaxTree.ParseText(buildResult.Output);
             var root = (CompilationUnitSyntax)tree.GetRoot();
 
             var namespaceDeclaration = root
@@ -73,6 +73,27 @@ namespace Forge.Model.Tests
                 .SingleOrDefault();
 
             Assert.NotNull(indexProperty);
+        }
+
+        [Fact]     
+        public void ModelBuilder_Fails_On_Duplicate_Property_Names()
+        {
+            var definition = new ModelDefinition
+            {
+                ClassName = "TestClass",
+                Namespace = "YourAppName.Models",
+                Properties = new[] 
+                {
+                    new ModelProperty { Name = "Index", Type = typeof(int) },
+                    new ModelProperty { Name = "Index", Type = typeof(string) }
+                }
+            };
+
+            var modelBuilder = new ModelBuilder();
+
+            var buildResult = modelBuilder.Build(definition);
+
+            Assert.False(buildResult.CompileResult.Success);
         }
     }
 }
