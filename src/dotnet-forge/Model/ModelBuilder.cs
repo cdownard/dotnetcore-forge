@@ -10,8 +10,11 @@ using Microsoft.CodeAnalysis.Formatting;
 
 namespace Forge.Model
 {
-    public class ModelBuilder
+    public sealed class ModelBuilder
     {
+        private const string ProjectName = "Forge";
+        private const string AssemblyName = "Forge";
+
         public ModelBuilderResult Build(ModelDefinition definition)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
@@ -32,54 +35,47 @@ namespace Forge.Model
                 ))
                 .ToArray();
 
-            var combined = namespaceDeclaration.AddMembers(classDeclaration.AddMembers(properties));
-            var compilationUnit = SyntaxFactory.CompilationUnit().AddMembers(combined);
+            var modelDeclaration = namespaceDeclaration.AddMembers(classDeclaration.AddMembers(properties));
 
-            var result = new StringBuilder();
-            var emitResult = default(EmitResult);
+            var syntaxResult = new StringBuilder();
+            var compileResult = default(EmitResult);
 
             using (var workspace = new AdhocWorkspace())
             {
-                var solutionInfo = SolutionInfo.Create(
-                    SolutionId.CreateNewId(),
-                    VersionStamp.Create());
-
-                var solution = workspace.AddSolution(solutionInfo);
-
                 var references = definition.Properties
-                    .Select(p => p.Type.GetTypeInfo())
-                    .Select(ti => ti.Assembly.Location)
+                    .Select(property => property.Type.GetTypeInfo())
+                    .Select(typeInfo => typeInfo.Assembly.Location)
                     .Distinct()
-                    .Select(al => MetadataReference.CreateFromFile(al))
+                    .Select(assemblyLocation => MetadataReference.CreateFromFile(assemblyLocation))
                     .ToArray();
 
                 var projectInfo = ProjectInfo.Create(
                     ProjectId.CreateNewId(),
                     VersionStamp.Create(),
-                    "Forge",
-                    "Forge",
+                    ProjectName,
+                    AssemblyName,
                     LanguageNames.CSharp,
                     metadataReferences: references);
 
                 var project = workspace.AddProject(projectInfo);
 
-                var document = project.AddDocument($"{definition.ClassName}", compilationUnit);
+                var document = project.AddDocument($"{definition.ClassName}", modelDeclaration);
 
                 var compilation = project.GetCompilationAsync().Result;
 
                 using (var ms = new MemoryStream())
                 {
-                    emitResult = compilation.Emit(ms);
+                    compileResult = compilation.Emit(ms);
                 }
 
-                var formatted = Formatter.Format(compilationUnit, workspace);
-                using (var writer = new StringWriter(result))
+                var formattedModelDeclaration = Formatter.Format(modelDeclaration, workspace);
+                using (var writer = new StringWriter(syntaxResult))
                 {
-                    formatted.WriteTo(writer);
+                    formattedModelDeclaration.WriteTo(writer);
                 }
             }
 
-            return new ModelBuilderResult(result.ToString(), emitResult);
+            return new ModelBuilderResult(syntaxResult.ToString(), compileResult);
         }
     }
 }
