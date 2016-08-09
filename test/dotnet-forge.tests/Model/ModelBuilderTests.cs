@@ -16,7 +16,7 @@ namespace Forge.Model.Tests
             {
                 ClassName = "TestClass",
                 Namespace = "YourAppName.Models",
-                Properties = new[] 
+                Properties = new[]
                 {
                     new ModelProperty { Name = "Index", Type = typeof(int) },
                     new ModelProperty { Name = "Name", Type = typeof(string) }
@@ -75,14 +75,14 @@ namespace Forge.Model.Tests
             Assert.NotNull(indexProperty);
         }
 
-        [Fact]     
+        [Fact]
         public void ModelBuilder_Fails_On_Duplicate_Property_Names()
         {
             var definition = new ModelDefinition
             {
                 ClassName = "TestClass",
                 Namespace = "YourAppName.Models",
-                Properties = new[] 
+                Properties = new[]
                 {
                     new ModelProperty { Name = "Index", Type = typeof(int) },
                     new ModelProperty { Name = "Index", Type = typeof(string) }

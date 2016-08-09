@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,35 +12,10 @@ namespace Forge.Model
 {
     public class ModelBuilder
     {
-        public EmitResult CheckForErrors(SyntaxTree tree, ModelDefinition definition)
-        {
-            var references = definition.Properties
-                .Select(p => p.Type.GetTypeInfo())
-                .Select(ti => ti.Assembly.Location)
-                .Distinct()
-                .Select(al => MetadataReference.CreateFromFile(al))
-                .ToArray();
-
-            var assemblyName = Path.GetRandomFileName();
-
-            var compilation = CSharpCompilation.Create(
-                assemblyName,
-                syntaxTrees: new [] { tree },
-                references: references,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-            var result = default(EmitResult);
-
-            using(var ms = new MemoryStream())
-            {
-                result = compilation.Emit(ms);
-            }
-
-            return result;
-        }
-
         public ModelBuilderResult Build(ModelDefinition definition)
         {
+            if (definition == null) throw new ArgumentNullException(nameof(definition));
+
             var namespaceDeclaration = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(definition.Namespace));
 
             var classDeclaration = SyntaxFactory
@@ -60,9 +36,42 @@ namespace Forge.Model
             var compilationUnit = SyntaxFactory.CompilationUnit().AddMembers(combined);
 
             var result = new StringBuilder();
+            var emitResult = default(EmitResult);
 
             using (var workspace = new AdhocWorkspace())
             {
+                var solutionInfo = SolutionInfo.Create(
+                    SolutionId.CreateNewId(),
+                    VersionStamp.Create());
+
+                var solution = workspace.AddSolution(solutionInfo);
+
+                var references = definition.Properties
+                    .Select(p => p.Type.GetTypeInfo())
+                    .Select(ti => ti.Assembly.Location)
+                    .Distinct()
+                    .Select(al => MetadataReference.CreateFromFile(al))
+                    .ToArray();
+
+                var projectInfo = ProjectInfo.Create(
+                    ProjectId.CreateNewId(),
+                    VersionStamp.Create(),
+                    "Forge",
+                    "Forge",
+                    LanguageNames.CSharp,
+                    metadataReferences: references);
+
+                var project = workspace.AddProject(projectInfo);
+
+                var document = project.AddDocument($"{definition.ClassName}", compilationUnit);
+
+                var compilation = project.GetCompilationAsync().Result;
+
+                using (var ms = new MemoryStream())
+                {
+                    emitResult = compilation.Emit(ms);
+                }
+
                 var formatted = Formatter.Format(compilationUnit, workspace);
                 using (var writer = new StringWriter(result))
                 {
@@ -70,7 +79,7 @@ namespace Forge.Model
                 }
             }
 
-            return new ModelBuilderResult(result.ToString(), CheckForErrors(compilationUnit.SyntaxTree, definition));
+            return new ModelBuilderResult(result.ToString(), emitResult);
         }
     }
 }
