@@ -8,7 +8,7 @@ namespace Forge
     {
         public IEnumerable<ValidationResult> ValidationResults { get; }
 
-        public CompositeValidationResult(string errorMessage, IEnumerable<ValidationResult> validationResults) : base(errorMessage)
+        public CompositeValidationResult(string errorMessage, IEnumerable<string> memberNames, IEnumerable<ValidationResult> validationResults) : base(errorMessage, memberNames)
         {
             ValidationResults = validationResults ?? Enumerable.Empty<ValidationResult>();
         }

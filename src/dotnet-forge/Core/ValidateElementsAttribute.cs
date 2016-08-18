@@ -12,7 +12,7 @@ namespace Forge
         {
             var validationResults = new List<ValidationResult>();
 
-            Validator.TryValidateObject(target, context, validationResults);
+            Validator.TryValidateObject(target, context, validationResults, true);
 
             return validationResults.AsReadOnly();
         }
@@ -27,7 +27,12 @@ namespace Forge
                     .Where(r => r != ValidationResult.Success)
                     .ToArray();
 
-                if (results.Length != 0) return new CompositeValidationResult($"Validation failed for {context.DisplayName}.", results);
+                if (results.Length != 0)
+                {
+                    var memberNames = new [] { context.MemberName };
+
+                    return new CompositeValidationResult($"Validation failed for {context.DisplayName}.", memberNames, results);
+                }
             }
 
             return ValidationResult.Success;

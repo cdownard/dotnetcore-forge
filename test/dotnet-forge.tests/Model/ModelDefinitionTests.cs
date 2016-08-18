@@ -101,7 +101,35 @@ namespace Forge.Model.Tests
             var validationContext = new ValidationContext(target);
             var validationResults = new List<ValidationResult>();
             bool isValid = Validator.TryValidateObject(target, validationContext, validationResults, true);
+
             Assert.False(isValid);
+            Assert.Equal(1, validationResults.Count);
+
+            var targetResult = validationResults
+                .Where(vr => vr.ErrorMessage == "Validation failed for Properties.")
+                .Where(vr => vr.MemberNames.SingleOrDefault() == "Properties")
+                .SingleOrDefault();
+
+            Assert.NotNull(targetResult);
+
+            var typedResult = targetResult as CompositeValidationResult;  
+
+            Assert.NotNull(targetResult);
+            Assert.Equal(2, typedResult.ValidationResults.Count());
+
+            var nameRequired = typedResult.ValidationResults
+                .Where(vr => vr.ErrorMessage == "The Name field is required.")
+                .Where(vr => vr.MemberNames.SingleOrDefault() == "Name")
+                .SingleOrDefault();
+
+            Assert.NotNull(nameRequired);
+
+            var typeRequired = typedResult.ValidationResults
+                .Where(vr => vr.ErrorMessage == "The Type field is required.")
+                .Where(vr => vr.MemberNames.SingleOrDefault() == "Type")
+                .SingleOrDefault();
+
+            Assert.NotNull(typeRequired);
         }
     }
 }

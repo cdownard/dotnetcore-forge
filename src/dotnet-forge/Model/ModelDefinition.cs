@@ -13,6 +13,7 @@ namespace Forge.Model
         public string ClassName { get; set; }
 
         [Required]
+        [ValidateElements]
         public IEnumerable<ModelProperty> Properties { get; set; }
 
         public ModelDefinition()
