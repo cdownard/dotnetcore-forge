@@ -15,8 +15,8 @@
   "frameworks": {
     "netcoreapp1.0": {
       "dependencies": {
-        "Microsoft.CodeAnalysis": "1.3.2", 
-        "Microsoft.CodeAnalysis.Compilers": "1.3.2",
+        "Microsoft.CodeAnalysis": "2.0.0-beta3", 
+        "Microsoft.CodeAnalysis.Compilers": "2.0.0-beta3",
         "Microsoft.NETCore.App": {
           "type": "platform",
           "version": "1.0.0"

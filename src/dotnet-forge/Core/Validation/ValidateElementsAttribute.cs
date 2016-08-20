@@ -25,13 +25,13 @@ namespace Forge
                     .Cast<object>()
                     .SelectMany(item => ValidateElement(item, new ValidationContext(item) { MemberName = context.MemberName, DisplayName = context.DisplayName }))
                     .Where(r => r != ValidationResult.Success)
-                    .ToArray();
+                    .ToList();
 
-                if (results.Length != 0)
+                if (results.Count != 0)
                 {
                     var memberNames = new [] { context.MemberName };
 
-                    return new CompositeValidationResult($"Validation failed for {context.DisplayName}.", memberNames, results);
+                    return new CompositeValidationResult($"Validation failed for {context.DisplayName}.", memberNames, results.AsReadOnly());
                 }
             }
 
